@@ -5,11 +5,6 @@ from pathlib import Path
 
 import tomli
 
-sys.path.append(Path(__file__).parent.parent.as_posix())
-import json
-
-from src.utils import logger
-
 filepath = Path(__file__).parent
 
 
@@ -27,9 +22,9 @@ with open(filepath.joinpath("model_config.toml"), mode="rb") as fp:
 
 config = Config(MODEL_CONFIG)
 
+print(f"Model Config: \n{json.dumps(MODEL_CONFIG, indent=4)}")
+
 if config.proxy.enable:
     os.environ["http_proxy"] = config.proxy.http_proxy if config.proxy.http_proxy else config.proxy.default
     os.environ["https_proxy"] = config.proxy.https_proxy if config.proxy.https_proxy else config.proxy.default
-    logger.debug(f"Set proxy: http_proxy={os.environ['http_proxy']}, https_proxy={os.environ['https_proxy']}")
-
-logger.debug(f"Model Config: \n{json.dumps(MODEL_CONFIG, indent=4)}")
+    print(f"Set http_proxy={os.environ['http_proxy']}, https_proxy={os.environ['https_proxy']}")

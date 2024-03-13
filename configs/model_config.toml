@@ -22,5 +22,6 @@ http_proxy = ""  # 如果没有设置，应该留空或者注释掉
 https_proxy = "" # 如果没有设置，应该留空或者注释掉
 
 # 常量配置（您的示例中没有定义任何常量，如果需要，可以在此处添加）
-#[constant]
-#key = "value"
+[constant]
+console_level = "TRACE"
+file_level = "INFO"

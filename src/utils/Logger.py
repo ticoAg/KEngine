@@ -5,6 +5,9 @@ from pathlib import Path
 import langchain
 from loguru import logger
 
+sys.path.append(Path(__file__).parents[2].as_posix())
+from configs import config
+
 logger.remove()
 
 # 是否显示详细日志
@@ -13,7 +16,9 @@ langchain.verbose = True
 
 
 class Logger:
+
     def __init__(self):
+
         # 日志存储路径
         LOG_PATH = Path(__file__).parents[2] / "logs"
         if not os.path.exists(LOG_PATH):
@@ -24,14 +29,14 @@ class Logger:
 
         logger.add(
             sink=sys.stderr,
-            level="TRACE",
+            level=config.constant.console_level,
             format=LOG_FORMAT,
             backtrace=True,
             diagnose=True,
         )
         logger.add(
             sink=LOG_PATH / "KEngine.log",
-            level="DEBUG",
+            level=config.constant.file_level,
             format=LOG_FORMAT,
             rotation="500 MB",
             colorize=False,
@@ -43,4 +48,9 @@ class Logger:
 
 
 logger = Logger().logger
-logger.info("Logger initialized.")
+logger.trace("Trace message")
+logger.debug("Debug message")
+logger.info("Info message")
+logger.warning("Warning message")
+logger.error("Error message")
+logger.critical("Critical message")

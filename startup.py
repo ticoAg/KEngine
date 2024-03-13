@@ -20,16 +20,8 @@ from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import RedirectResponse
 
-from src.serve import (
-    EmbeddingsRequest,
-    EmbeddingsResponse,
-    ErrorCode,
-    UsageInfo,
-    check_api_key,
-    check_model,
-    create_error_response,
-    process_input,
-)
+from src.serve import (EmbeddingsRequest, EmbeddingsResponse, ErrorCode, UsageInfo, check_api_key,
+                       check_model, create_error_response, embeddings_pool, process_input)
 
 app = FastAPI()
 
@@ -82,12 +74,6 @@ app.get("/", response_model=BaseResponse, summary="swagger 文档")(document)
 @app.post("/v1/engines/{model_name}/embeddings", dependencies=[Depends(check_api_key)])
 async def create_embeddings(request: EmbeddingsRequest, model_name: str = None):
     """Creates embeddings for the text"""
-    if request.model is None:
-        request.model = model_name
-    error_check_ret = await check_model(request)
-    if error_check_ret is not None:
-        return error_check_ret
-
     request.input = process_input(request.model, request.input)
 
     data = []
@@ -126,9 +112,10 @@ async def create_embeddings(request: EmbeddingsRequest, model_name: str = None):
 
 
 async def get_embedding(payload: Dict[str, Any]):
-    model_name = payload["model"]
-    embedding = await fetch_remote("." + "/worker_get_embeddings", payload)
-    return json.loads(embedding)
+    model_name = payload.get("model", config.embedding.default)
+    embed_model = embeddings_pool.load_embeddings(model=model_name)
+    embeddings = await embed_model.aembed_documents(payload["input"])
+    return {"embedding": embeddings, "token_num": len("".join(payload["input"])), "error_code": 0, "text": ""}
 
 
 def create_app():
