@@ -128,9 +128,6 @@ class EmbeddingsPool(CachePool):
                     )
                     if model == "bge-large-zh-noinstruct":  # bge large -noinstruct embedding
                         embeddings.query_instruction = ""
-                # elif "bce-" in model:
-                #     from ..models import EmbeddingModel
-                #     embeddings = EmbeddingModel(model_name_or_path=model, device=device, use_fp16=True)
                 else:
                     from langchain.embeddings.huggingface import HuggingFaceEmbeddings
 

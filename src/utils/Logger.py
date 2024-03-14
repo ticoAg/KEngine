@@ -48,9 +48,11 @@ class Logger:
 
 
 logger = Logger().logger
-logger.trace("Trace message")
-logger.debug("Debug message")
-logger.info("Info message")
-logger.warning("Warning message")
-logger.error("Error message")
-logger.critical("Critical message")
+
+if __name__ == "__main__":
+    logger.trace("Trace message")
+    logger.debug("Debug message")
+    logger.info("Info message")
+    logger.warning("Warning message")
+    logger.error("Error message")
+    logger.critical("Critical message")

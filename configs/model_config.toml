@@ -15,11 +15,12 @@ default = "maidalun1020/bce-reranker-base_v1"
 device = "cuda"
 
 # 代理配置
-[proxy]
-enable = true
-default = "http://127.0.0.1:8888"
-http_proxy = ""  # 如果没有设置，应该留空或者注释掉
-https_proxy = "" # 如果没有设置，应该留空或者注释掉
+[network]
+proxy.enable = true
+proxy.default = "http://127.0.0.1:8888"
+proxy.http_proxy = ""  # 如果没有设置，应该留空或者注释掉
+proxy.https_proxy = "" # 如果没有设置，应该留空或者注释掉
+open_cross_domain = "true"
 
 # 常量配置（您的示例中没有定义任何常量，如果需要，可以在此处添加）
 [constant]

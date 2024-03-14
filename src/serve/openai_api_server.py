@@ -7,6 +7,7 @@
 Usage:
 python3 -m fastchat.serve.openai_api_server
 """
+
 import argparse
 import asyncio
 import json
@@ -32,19 +33,34 @@ import tiktoken
 import uvicorn
 from fastchat.constants import WORKER_API_EMBEDDING_BATCH_SIZE, WORKER_API_TIMEOUT, ErrorCode
 from fastchat.conversation import Conversation, SeparatorStyle
-from fastchat.protocol.api_protocol import (APIChatCompletionRequest, APITokenCheckRequest,
-                                            APITokenCheckResponse, APITokenCheckResponseItem)
-from fastchat.protocol.openai_api_protocol import (ChatCompletionRequest, ChatCompletionResponse,
-                                                   ChatCompletionResponseChoice,
-                                                   ChatCompletionResponseStreamChoice,
-                                                   ChatCompletionStreamResponse, ChatMessage,
-                                                   CompletionRequest, CompletionResponse,
-                                                   CompletionResponseChoice,
-                                                   CompletionResponseStreamChoice,
-                                                   CompletionStreamResponse, DeltaMessage,
-                                                   EmbeddingsRequest, EmbeddingsResponse,
-                                                   ErrorResponse, LogProbs, ModelCard, ModelList,
-                                                   ModelPermission, UsageInfo)
+from fastchat.protocol.api_protocol import (
+    APIChatCompletionRequest,
+    APITokenCheckRequest,
+    APITokenCheckResponse,
+    APITokenCheckResponseItem,
+)
+from fastchat.protocol.openai_api_protocol import (
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ChatCompletionResponseChoice,
+    ChatCompletionResponseStreamChoice,
+    ChatCompletionStreamResponse,
+    ChatMessage,
+    CompletionRequest,
+    CompletionResponse,
+    CompletionResponseChoice,
+    CompletionResponseStreamChoice,
+    CompletionStreamResponse,
+    DeltaMessage,
+    EmbeddingsRequest,
+    EmbeddingsResponse,
+    ErrorResponse,
+    LogProbs,
+    ModelCard,
+    ModelList,
+    ModelPermission,
+    UsageInfo,
+)
 
 from src.utils.Logger import logger
 
@@ -112,9 +128,7 @@ async def check_api_key(
 
 
 def create_error_response(code: int, message: str) -> JSONResponse:
-    return JSONResponse(
-        ErrorResponse(message=message, code=code).dict(), status_code=400
-    )
+    return JSONResponse(ErrorResponse(message=message, code=code).dict(), status_code=400)
 
 
 @app.exception_handler(RequestValidationError)
@@ -135,7 +149,6 @@ async def check_model(request) -> Optional[JSONResponse]:
     return ret
 
 
-
 @app.get("/v1/models", dependencies=[Depends(check_api_key)])
 async def show_available_models():
     controller_address = app_settings.controller_address
@@ -148,6 +161,7 @@ async def show_available_models():
     for m in models:
         model_cards.append(ModelCard(id=m, root=m, permission=[ModelPermission()]))
     return ModelList(data=model_cards)
+
 
 def process_input(model_name, inp):
     if isinstance(inp, str):
@@ -189,8 +203,7 @@ async def create_embeddings(request: EmbeddingsRequest, model_name: str = None):
     token_num = 0
     batch_size = WORKER_API_EMBEDDING_BATCH_SIZE
     batches = [
-        request.input[i : min(i + batch_size, len(request.input))]
-        for i in range(0, len(request.input), batch_size)
+        request.input[i : min(i + batch_size, len(request.input))] for i in range(0, len(request.input), batch_size)
     ]
     for num_batch, batch in enumerate(batches):
         payload = {
@@ -219,15 +232,6 @@ async def create_embeddings(request: EmbeddingsRequest, model_name: str = None):
             completion_tokens=None,
         ),
     ).dict(exclude_none=True)
-
-
-async def get_embedding(payload: Dict[str, Any]):
-    controller_address = app_settings.controller_address
-    model_name = payload["model"]
-    worker_addr = await get_worker_address(model_name)
-
-    embedding = await fetch_remote(worker_addr + "/worker_get_embeddings", payload)
-    return json.loads(embedding)
 
 
 ### GENERAL API - NOT OPENAI COMPATIBLE ###
@@ -259,11 +263,7 @@ async def count_tokens(request: APITokenCheckRequest):
         if token_num + item.max_tokens > context_len:
             can_fit = False
 
-        checkedList.append(
-            APITokenCheckResponseItem(
-                fits=can_fit, contextLength=context_len, tokenCount=token_num
-            )
-        )
+        checkedList.append(APITokenCheckResponseItem(fits=can_fit, contextLength=context_len, tokenCount=token_num))
 
     return APITokenCheckResponse(prompts=checkedList)
 
@@ -310,9 +310,7 @@ async def create_chat_completion(request: APIChatCompletionRequest):
     gen_params["max_new_tokens"] = max_new_tokens
 
     if request.stream:
-        generator = chat_completion_stream_generator(
-            request.model, gen_params, request.n, worker_addr
-        )
+        generator = chat_completion_stream_generator(request.model, gen_params, request.n, worker_addr)
         return StreamingResponse(generator, media_type="text/event-stream")
 
     choices = []
@@ -346,26 +344,14 @@ async def create_chat_completion(request: APIChatCompletionRequest):
 
 
 def create_openai_api_server():
-    parser = argparse.ArgumentParser(
-        description="FastChat ChatGPT-Compatible RESTful API server."
-    )
+    parser = argparse.ArgumentParser(description="FastChat ChatGPT-Compatible RESTful API server.")
     parser.add_argument("--host", type=str, default="localhost", help="host name")
     parser.add_argument("--port", type=int, default=8000, help="port number")
-    parser.add_argument(
-        "--controller-address", type=str, default="http://localhost:21001"
-    )
-    parser.add_argument(
-        "--allow-credentials", action="store_true", help="allow credentials"
-    )
-    parser.add_argument(
-        "--allowed-origins", type=json.loads, default=["*"], help="allowed origins"
-    )
-    parser.add_argument(
-        "--allowed-methods", type=json.loads, default=["*"], help="allowed methods"
-    )
-    parser.add_argument(
-        "--allowed-headers", type=json.loads, default=["*"], help="allowed headers"
-    )
+    parser.add_argument("--controller-address", type=str, default="http://localhost:21001")
+    parser.add_argument("--allow-credentials", action="store_true", help="allow credentials")
+    parser.add_argument("--allowed-origins", type=json.loads, default=["*"], help="allowed origins")
+    parser.add_argument("--allowed-methods", type=json.loads, default=["*"], help="allowed methods")
+    parser.add_argument("--allowed-headers", type=json.loads, default=["*"], help="allowed headers")
     parser.add_argument(
         "--api-keys",
         type=lambda s: s.split(","),

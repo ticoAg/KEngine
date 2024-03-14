@@ -22,9 +22,13 @@ with open(filepath.joinpath("model_config.toml"), mode="rb") as fp:
 
 config = Config(MODEL_CONFIG)
 
-print(f"Model Config: \n{json.dumps(MODEL_CONFIG, indent=4)}")
+# print(f"Model Config: \n{json.dumps(MODEL_CONFIG, indent=4)}")
 
-if config.proxy.enable:
-    os.environ["http_proxy"] = config.proxy.http_proxy if config.proxy.http_proxy else config.proxy.default
-    os.environ["https_proxy"] = config.proxy.https_proxy if config.proxy.https_proxy else config.proxy.default
+if config.network.proxy.enable:
+    os.environ["http_proxy"] = (
+        config.network.proxy.http_proxy if config.network.proxy.http_proxy else config.network.proxy.default
+    )
+    os.environ["https_proxy"] = (
+        config.network.proxy.https_proxy if config.network.proxy.https_proxy else config.network.proxy.default
+    )
     print(f"Set http_proxy={os.environ['http_proxy']}, https_proxy={os.environ['https_proxy']}")
